@@ -1,4 +1,5 @@
 require 'byebug'
+require 'pry'
 
 class Array
   def my_each(&proc)
@@ -8,6 +9,14 @@ class Array
       i += 1
     end
     self
+  end
+
+  def my_inject(acc = nil, &proc)
+    acc ||= self.shift
+    self.my_each do |el|
+      acc = yield acc, el
+    end
+    acc
   end
 
   def my_select(&proc)
@@ -63,7 +72,6 @@ class Array
       row = []
       (0...rows).each do |row_j|
         row << combo_arr[row_j][col_i]
-        # p transpose
       end
       transpose << row
     end
@@ -126,4 +134,10 @@ end
 
 def subwords(word, dictionary)
   substrings(word).select { |el| dictionary.include? el }
+end
+
+if __FILE__ == $PROGRAM_NAME
+  # loads into pry
+  pry if ARGV.shift == "pry"
+
 end
