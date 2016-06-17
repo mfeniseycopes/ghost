@@ -73,7 +73,7 @@ class Game
 
   def message_round_over
     message(5) do
-      puts "''#{@fragment}'' is a word."
+      puts "'#{@fragment}' is a word."
       puts "ROUND OVER MAN!!! #{previous_player} is becoming a ghost!!"
       display_standings
     end
@@ -114,7 +114,7 @@ class Game
   end
 
   def round_over?
-    @working_dictionary.include?  @fragment
+    @working_dictionary.size == 0 || @working_dictionary.include?(@fragment)
   end
 
   def round
