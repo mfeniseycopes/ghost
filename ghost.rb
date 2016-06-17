@@ -8,14 +8,10 @@ class Game
   GHOST = "GHOST"
 
   def initialize(player_1, player_2)
-    # game vars
+
     @players = [player_1, player_2]
     @scores = { player_1 => 0, player_2 => 0 }
-    @dictionary = Set.new
-    @round = 1
-    File.open( "dictionary.txt").each { |line| @dictionary << line.chomp }
-
-    # for each round
+    @dictionary = File.open( "dictionary.txt").readlines.map(&:chomp)
 
   end
 
@@ -43,19 +39,18 @@ class Game
   end
 
   def game_over?
-    # debugger
     @scores.count { |player, score| score == 5 } > 0
   end
 
-  def message(&prc)
+  def message(wait = 1, &prc)
     system("clear")
     puts yield
-    sleep(3)
+    sleep(wait)
   end
 
   def message_game_over
-    message do
-      "GAME OVER MAN!!! #{winner.name} WINS THE GAME!!\n"
+    message(2) do
+      "GAME OVER MAN!!! #{winner.name} WINS THE GAME!!"
        display_standings
     end
   end
@@ -65,21 +60,21 @@ class Game
   end
 
   def message_new_round
-    message { puts "Begin round #{@round}!" }
+    message { puts "Begin round #{round}!" }
   end
 
   def message_new_turn
+    message { puts "Next Player... " } if @fragment.length != 0
     message do
-      message { puts "Next Player... " } if @round != 1
-      puts "FRAGMENT: #{@fragment}"
-      puts "PLAYER: #{current_player}"
+      puts "#{record(current_player)}: #{current_player}"
+      puts "working on: #{@fragment}"
     end
   end
 
   def message_round_over
-    message do
-      puts "#{@fragment} is a word"
-      puts "ROUND OVER MAN!!! #{previous_player} GETS A NEW LETTER!!"
+    message(5) do
+      puts "''#{@fragment}'' is a word."
+      puts "ROUND OVER MAN!!! #{previous_player} is becoming a ghost!!"
       display_standings
     end
   end
@@ -92,10 +87,11 @@ class Game
     # intialize empty fragment
     @fragment = ""
     # reset to full dictionary
-    @working_dictionary = @dictionary
+    @working_dictionary = @dictionary.dup
 
     # get user inputs until round over
     message_new_round
+
     until round_over?
       take_turn current_player
 
@@ -106,6 +102,10 @@ class Game
       next_player!
     end
 
+    # updates user with standings
+    message_round_over
+
+    # post round data management
     @scores[previous_player] += 1
   end
 
@@ -114,12 +114,17 @@ class Game
   end
 
   def round_over?
-    # debugger
     @working_dictionary.include?  @fragment
   end
 
+  def round
+    @scores.values.reduce(1, :+)
+  end
+
   def record(player)
-    GHOST[0, @scores[player]]
+    letters = GHOST[0, @scores[player]]
+    spaces = "_" * (GHOST.length - @scores[player])
+    letters + spaces
   end
 
   def take_turn(player)
@@ -142,11 +147,11 @@ class Game
 
   end
 
-  def valid_play?(string)
-    return false unless !!string.match(/^[[:alpha:]]$/)
+  def valid_play?(user_input)
+    return false unless user_input.between?("a", "z")
 
-    working_dictionary.each do |el|
-      return true if el.start_with? @fragment + string
+    @working_dictionary.each do |el|
+      return true if el.start_with? @fragment + user_input
     end
     false
   end
