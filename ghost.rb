@@ -1,5 +1,6 @@
 require 'set'
 require 'byebug'
+require 'pry'
 
 class Game
   attr_reader :dictionary, :players, :fragment, :working_dictionary
@@ -11,18 +12,17 @@ class Game
     @players = [player_1, player_2]
     @scores = { player_1 => 0, player_2 => 0 }
     @dictionary = Set.new
-    @rounds = 0
+    @round = 1
     File.open( "dictionary.txt").each { |line| @dictionary << line.chomp }
 
     # for each round
-    @fragment = ""
-    @working_dictionary = @dictionary
+
   end
 
   # starts game of GHOST
   def run
     message_new_game
-    unless game_over?
+    until game_over?
       play_round
     end
     message_game_over
@@ -43,26 +43,45 @@ class Game
   end
 
   def game_over?
-    @scores.count { |player, score| score != 5 } == 1
+    # debugger
+    @scores.count { |player, score| score == 5 } > 0
+  end
+
+  def message(&prc)
+    system("clear")
+    puts yield
+    sleep(3)
   end
 
   def message_game_over
-    puts "GAME OVER MAN!!! #{winner.name} WINS THE GAME!!"
-    display_standings
+    message do
+      "GAME OVER MAN!!! #{winner.name} WINS THE GAME!!\n"
+       display_standings
+    end
   end
 
   def message_new_game
-    puts "Let's play #{GHOST}"
+    message { puts "Let's play #{GHOST}" }
   end
 
   def message_new_round
-    puts "Begin round #{@round}!"
+    message { puts "Begin round #{@round}!" }
+  end
+
+  def message_new_turn
+    message do
+      message { puts "Next Player... " } if @round != 1
+      puts "FRAGMENT: #{@fragment}"
+      puts "PLAYER: #{current_player}"
+    end
   end
 
   def message_round_over
-    puts "#{fragment} is a word"
-    puts "ROUND OVER MAN!!! #{previous_player} GETS A NEW LETTER!!"
-    display_standings
+    message do
+      puts "#{@fragment} is a word"
+      puts "ROUND OVER MAN!!! #{previous_player} GETS A NEW LETTER!!"
+      display_standings
+    end
   end
 
   def next_player!
@@ -70,11 +89,21 @@ class Game
   end
 
   def play_round
-    debugger
-    message_new_round
+    # intialize empty fragment
+    @fragment = ""
+    # reset to full dictionary
+    @working_dictionary = @dictionary
 
-    unless round_over?
+    # get user inputs until round over
+    message_new_round
+    until round_over?
       take_turn current_player
+
+      # update dictionary
+      @working_dictionary.select!{ |el| el.start_with? @fragment }
+
+      # move play to next player
+      next_player!
     end
 
     @scores[previous_player] += 1
@@ -85,8 +114,8 @@ class Game
   end
 
   def round_over?
-
-    @working_dictionary.count == 1 && (@working_dictionary.include? @fragment)
+    # debugger
+    @working_dictionary.include?  @fragment
   end
 
   def record(player)
@@ -94,22 +123,23 @@ class Game
   end
 
   def take_turn(player)
+
+    message_new_turn
+
     # gets input from current player
-    input = ""
+    guess = ""
     while true
-      input = player.guess
-      unless valid_play?(input)
-        player.alert_invalid_guess
-      else
+      guess = player.guess
+      if valid_play?(guess)
         break
+      else
+        player.alert_invalid_guess
       end
     end
-    # updates fragment with player input
-    @fragment += input
-    # update dictionary
-    @working_dictionary.select!{|el| el.start_with? @fragment}
 
-    next_player!
+    # updates fragment with player guess
+    @fragment += guess
+
   end
 
   def valid_play?(string)
@@ -134,12 +164,12 @@ class Player
   end
 
   def alert_invalid_guess
-    puts "Invalid play. Try again."
+    puts "Invalid play. Try again.\n"
   end
 
   def guess
-    puts "Enter a single letter: "
-    gets.strip
+    print "Enter a single letter: "
+    guess = gets.strip
   end
 
   def to_s
@@ -149,8 +179,12 @@ class Player
 end
 
 if __FILE__ == $PROGRAM_NAME
-  player_1 = Player.new "Player 1"
-  player_2 = Player.new "Player 2"
-  game = Game.new(player_1, player_2)
-  game.run
+  if ARGV.shift == "pry"
+    pry
+  else
+    player_1 = Player.new "Player 1"
+    player_2 = Player.new "Player 2"
+    game = Game.new(player_1, player_2)
+    game.run
+  end
 end
