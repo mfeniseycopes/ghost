@@ -85,17 +85,18 @@ class Array
 
   def bubble_sort!
     swapping = !self.empty?
-    unsorted_length = self.length
+    unsorted = self.length - 2
     while swapping
       swapping = false
-      (0..unsorted_length - 2).each do |index|
-        if swapping = self[index] > self[index + 1]
-          self[index], self[index + 1] = self[index + 1], self[index]
+      (0..unsorted).each do |idx|
+        # updates swapping & checks for need to swap
+        if swapping = self[idx] > self[idx + 1]
+          self[idx], self[idx + 1] = self[idx + 1], self[idx]
         end
       end
-      unsorted_length -= 1
+      unsorted -= 1
     end
-    return self
+    self
   end
 
   def bubble_sort
@@ -105,7 +106,7 @@ end
 
 
 def factors(num)
-  primes = (1..num/2).select { |k| num % k == 0 }
+  primes = (1..num / 2).select { |k| num % k == 0 }
   primes << num
 end
 
