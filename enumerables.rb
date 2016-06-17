@@ -62,20 +62,8 @@ class Array
   end
 
   def my_zip(*arrs)
-
     combo_arr = [self] + arrs
-    columns = self.size
-    rows = combo_arr.size
-    transpose = []
-    #debugger
-    (0...columns).each do |col_i|
-      row = []
-      (0...rows).each do |row_j|
-        row << combo_arr[row_j][col_i]
-      end
-      transpose << row
-    end
-    transpose
+    combo_arr.transpose
   end
 
   def my_rotate(k = 1)
