@@ -7,7 +7,7 @@ Ghost is a two player console game.
 ## Playing the Game
 
 1. Clone the repo.
-2. From the console,within the repo directory, run `ruby ghost.rb`.
+2. From the console, within the repo directory, run `ruby ghost.rb`.
 3. Players take turns adding a letter to the word, trying to not complete a word.
 
 ## About the Game
